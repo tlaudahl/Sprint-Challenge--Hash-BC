@@ -11,6 +11,7 @@ import random
 
 
 def proof_of_work(last_proof):
+    print(f'last_proof: {last_proof}')
     """
     Multi-Ouroboros of Work Algorithm
     - Find a number p' such that the last six digits of hash(p) are equal
@@ -23,8 +24,11 @@ def proof_of_work(last_proof):
     start = timer()
 
     print("Searching for next proof")
-    proof = 0
-    #  TODO: Your code here
+    proof = random.randint(-999999999999, 999999999999)
+
+    last_hash = hashlib.sha256(str(last_proof).encode()).hexdigest()
+    while valid_proof(last_hash, proof) is False:
+        proof += random.randint(1, 100)
 
     print("Proof found: " + str(proof) + " in " + str(timer() - start))
     return proof
@@ -40,6 +44,9 @@ def valid_proof(last_hash, proof):
     """
 
     # TODO: Your code here!
+    guess_hash = hashlib.sha256(str(proof).encode()).hexdigest()
+    return guess_hash[:6] == last_hash[-6:]
+
     pass
 
 
@@ -65,7 +72,13 @@ if __name__ == '__main__':
     while True:
         # Get the last proof from the server
         r = requests.get(url=node + "/last_proof")
-        data = r.json()
+        try:
+            data = r.json()
+        except ValueError:
+            print("Error:  Non-json response")
+            print("Response returned:")
+            print(r)
+            break
         new_proof = proof_of_work(data.get('proof'))
 
         post_data = {"proof": new_proof,
